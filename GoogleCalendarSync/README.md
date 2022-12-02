@@ -37,6 +37,7 @@ Note - if you have multiple personal Google calendars you want to sync, you'll h
 5. We'll also need the Calendar ID for the next steps, so scroll through the calendar's settings until you see "Integrate calendar". The first item in that section will be "Calendar ID"; if this is the main calendar for a personal Gmail account, the ID will probably be your email address. Save your ID.
 
 ![Get your personal calendar ID](images/personal-cal-id.png)
+<img style='border:1px solid #000000' src="images/personal-cal-id.png" width="80%" class="center">
 
 ### B. Set up the integration in your work Google calendar
 1. Open your work email, which should now have something from Google notifying you that your personal email shared a calendar. Click on the "Add this calendar" link.
