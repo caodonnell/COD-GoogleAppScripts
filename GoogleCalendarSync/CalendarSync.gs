@@ -3,6 +3,7 @@
 
 var id="christine.a.odon@gmail.com"; // CHANGE - id of the secondary calendar to pull events from
 const daysToSync = 70; // how many days out from today should the function look for events
+var travelBuffer = 30; // in minutes; make this a negative number to disable travel buffer events
 var includeTitle = true; // whether the holds and travel buffers include the personal event title in the description; if false, it will use the event id from the secondary calendar
 
 
@@ -27,6 +28,11 @@ var includeTitle = true; // whether the holds and travel buffers include the per
 *     the hold event manually), the script will not remove the orphan travle buffers.
 */
 
+// NOTE: This script only uses data from the two calendars. 
+// A more efficient script would create a database to store info on created events
+// (which simplifies updating holds and buffers), but that means there would be an
+// additional file stored in Google Drive
+
 
 /*----- CUSTOMIZEABLE OPTIONS -----*/
 // primary calendar = work calendar
@@ -36,9 +42,6 @@ var primaryEventTitle = "Busy (Synced Event)"; // update this to the text you'd 
 var primaryEventTravelTitle = "Travel buffer"; // if a synced event has a location set, this will be the name for a travel buffer event
 var primaryEventTravelDescription = ""; // if a synced event has a location set, this be the start of the description for the travel buffer event
 var primaryEventLocation = "[Travel required]"; // to sync a location (that isn't a Zoom URL), but hide the details
-
-var travelBuffer = 30; // in minutes
-const minsToMilliseconds = 60000; // convert minutes to milliseconds
 
 var syncWeekdaysOnly = true; // only sync events on weekdays (i.e., skip weekends)
 var skipAllDayEvents = true; // only sync events with scheduled times (i.e., skip events that are all day or multi-day)
@@ -56,6 +59,9 @@ var includeDescription = false; // whether holds in the primary calendar should 
 // note - this will fail if you changed things like the primaryEventTitle,
 // primaryEventTravelTitle, and/or primaryEventTravelDescription
 var clearAllHolds = false; // will try to delete all holds, travel buffers on the primary calendar
+
+// DO NOT CHANGE THIS PARAMTER - required for creating travel buffers
+const minsToMilliseconds = 60000; // convert minutes to milliseconds
 
 
 /*----- CUSTOMIZEABLE HELPER FUNCTIONS -----*/
@@ -99,9 +105,10 @@ function createLocation(evi) {
   return '';
 }
 //similar to above, but returns true if there is a non-Zoom location
+// also checks if travelBufer is positive (i.e., whether there will be travel buffers)
 function checkEventLocation(evi) {
   var eviLocation = evi.getLocation().trim(); // remove whitespace
-  if ((eviLocation != '') && (eviLocation.indexOf('.zoom.') < 0)) {
+  if ((eviLocation != '') && (eviLocation.indexOf('.zoom.') < 0) && (travelBuffer > 0)) {
     return true;
   }
   return false;
@@ -185,7 +192,7 @@ function eventUpdate(cal, eventsTravel, pEvent, secEvent) {
   var pLocation = pEvent.getLocation().trim();
   var secLocation = createLocation(secEvent);
   
-  if ((pLocation == '') && (secLocation != '')) { //new location added
+  if ((pLocation == '') && (secLocation != '') && (travelBuffer > 0)) { //new location added
     var pTravel = eventTravel(cal, getEventTitleDescription(pEvent), secEvent.getStartTime(), secEvent.getEndTime());
     var pTravelDeleted = null;
     pEvent.setLocation(secLocation);
@@ -193,11 +200,11 @@ function eventUpdate(cal, eventsTravel, pEvent, secEvent) {
 
   if (removeEventReminders) {
     pEvent.removeAllReminders();
-  } else if (removeEventReminderIfTravelReminder && ((pTravel != null) || (pLocation != '')) && !removeTravelBeforeReminders) {
+  } else if (removeEventReminderIfTravelReminder && ((pTravel != null) || ((pLocation != '')&&(travelBuffer > 0))) && !removeTravelBeforeReminders) {
     pEvent.removeAllReminders();
   }
   
-  if ((pLocation != '') && (secLocation == '')) { //location removed
+  if ((pLocation != '') && (secLocation == '') && (travelBuffer > 0)) { //location removed
     var pTravel = null;
     var pTravelDeleted = travelDelete(pEvent,getEventTitleDescription(pEvent), eventsTravel);
     pEvent.setLocation(secLocation);
@@ -380,7 +387,7 @@ function sync() {
     var pevIsUpdatedIndex = primaryEventsUpdated.indexOf(pEvent.getId());
     if (pevIsUpdatedIndex == -1) // it's not among the updated events
     { 
-      if (primaryEventsFiltered[pev].getLocation().trim() != '') { // if it had a travel buffer, find those too
+      if (checkEventLocation(pEvent)) { // if it had a travel buffer, find those too
         var deletedTravel = travelDelete(pEvent, getEventTitleDescription(pEvent), primaryEventsTravel);
         primaryEventsTravelDeleted = primaryEventsTravelDeleted.concat(deletedTravel);
       }
