@@ -1,7 +1,7 @@
 // Code inspired by https://janelloi.com/auto-sync-google-calendar/
 // which uses https://gist.github.com/ttrahan/a88febc0538315b05346f4e3b35997f2 
 
-var id="christine.a.odon@gmail.com"; // CHANGE - id of the secondary calendar to pull events from
+var id="XXX"; // CHANGE - id of the secondary calendar to pull events from
 const daysToSync = 70; // how many days out from today should the function look for events
 var travelBuffer = 30; // in minutes; make this a negative number to disable travel buffer events
 var includeTitle = true; // whether the holds and travel buffers include the personal event title in the description; if false, it will use the event id from the secondary calendar
