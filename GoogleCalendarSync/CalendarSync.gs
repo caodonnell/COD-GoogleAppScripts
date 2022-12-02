@@ -1,7 +1,7 @@
 // Code inspired by https://janelloi.com/auto-sync-google-calendar/
 // which uses https://gist.github.com/ttrahan/a88febc0538315b05346f4e3b35997f2 
 
-var id="XXX"; // CHANGE - id of the secondary calendar to pull events from
+var id="christine.a.odon@gmail.com"; // CHANGE - id of the secondary calendar to pull events from
 const daysToSync = 70; // how many days out from today should the function look for events
 var includeTitle = true; // whether the holds and travel buffers include the personal event title in the description; if false, it will use the event id from the secondary calendar
 
@@ -53,6 +53,8 @@ var includeDescription = false; // whether holds in the primary calendar should 
 
 // DO NOT CHANGE THIS UNLESS YOU REALLY WANT TO TRY TO DELETE 
 // ALL OF THE HOLDS AND TRAVEL BUFFERS ON YOUR PRIMARY CALENDAR
+// note - this will fail if you changed things like the primaryEventTitle,
+// primaryEventTravelTitle, and/or primaryEventTravelDescription
 var clearAllHolds = false; // will try to delete all holds, travel buffers on the primary calendar
 
 
