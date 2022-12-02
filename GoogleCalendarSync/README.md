@@ -8,8 +8,8 @@ further out than that), or they didn't keep everything as private as I wanted. S
 
 ## What does this script do? What does it not do?
 This scripts takes data from a personal/secondary calendar and creates events/holds on a primary/work calendar to block off time 
-for personal events and activities. It will also create events for travel/buffer time around events on the personal/secondary
-calendar that have a set location that is not a Zoom link.
+for personal events and activities. It will also create events for travel/buffer time in the primary/work calendar for events 
+that have a location. 
 
 There are a few limits on the script as written:
 * Travel buffer time is a fixed amount of time.
@@ -57,12 +57,13 @@ Note - if you have multiple personal Google calendars you want to sync, you'll h
 
 5. Copy and paste the script from [my code](https://github.com/caodonnell/COD-GoogleAppScripts/blob/main/GoogleCalendarSync/CalendarSync.gs) into the window. You need to copy everything.
 6. **YOU NEED TO ENTER YOUR CALENDAR ID IN LINE 4**. This is the ID you saved from A.5 above when checking out the settings of your personal calendar. **Replace the XXX, but make sure you don't remove the quotation marks or the semicolon at the end of the line.**
-7. Press the floppy disk icon to Save the code.
-8. Click "Run" to execute the script. Google will ask you for permission to run the script, since it does read and edit your calendar. Please grant it all of the permissions it requires. As the script runs, there will be some output at hte bottom of the screen in the Execution Log. If it completes successfully, the last line in the log should be yellow and say "Execution completed" (you may need to scroll down to see it). Depending on how many days out you want to sync events from your personal calendar and how many events there are to sync, the script might take a minute. If the log ends with a red line and an error message, check that you copied the entire script and entered your calendar ID correctly.
+7. *(Optional)* Line 5 is a variable for how many days out from today should the script sync events from your personal calendar. I set it to 70 (so, 10 weeks), which does mean the script can take a minute to run. Fewer days means that the script is faster, but that means if you're trying to plan something further out, things may not have synced yet from the personal calendar.
+8. Press the floppy disk icon to Save the code.
+9. Click "Run" to execute the script. Google will ask you for permission to run the script, since it does read and edit your calendar. Please grant it all of the permissions it requires. As the script runs, there will be some output at hte bottom of the screen in the Execution Log. If it completes successfully, the last line in the log should be yellow and say "Execution completed" (you may need to scroll down to see it). Depending on how many days out you want to sync events from your personal calendar and how many events there are to sync, the script might take a minute. If the log ends with a red line and an error message, check that you copied the entire script and entered your calendar ID correctly.
 
-> ![Copy and paste the calendar sync script, and edit line 4 to include your personal calendar ID. Then save and run the script before clicking on the clock icon to set up an automation](images/script-edit.png)
+> ![Copy and paste the calendar sync script, and edit line 4 to include your personal calendar ID. Then save and run the script before clicking on the clock icon to set up an automation](images/script-edit-v2.png)
 
-9. Check that everything worked correctly by going through your calendar to see if events and travel buffers appear as expected.
+10. Check that everything worked correctly by going through your calendar to see if events and travel buffers appear as expected.
 
 ### D. Set up automation so the script will run every time you update your personal calendar
 1. In the Apps Script window, click the clock icon on the left sidebar. There should be a "Add trigger" button in the bottom right of the main window. 
@@ -72,15 +73,15 @@ Note - if you have multiple personal Google calendars you want to sync, you'll h
   - Which runs at deployment: **Head** (this should be the default setting)
   - Select event source: **From calendar**
   - Enter calendar details: **Calendar updated** and then enter the **email associated with your personal calendar**
+ 4. As a caveat to the above, if you set the number of days to sync from your personal calendar to be a small number, you may want to add in a second trigger that runs on a time basis (e.g., a second trigger where the event source is "Time-driven", the type of time is a "Day timer", and it runs everyday "Midnight to 1am").
  
 > ![Parameters for setting up a trigger so that the script will automatically run when you update your personal calendar](images/trigger-setup.png)
 
 ### E. Optional: Change settings in the script
-Lines 26-42 include a variety of things you can change, including
+Lines 28-42 include a variety of things you can change, including
 * Default titles for holds and travel buffers on the primary/work calendar 
 * Default text for events with a location (that isn't a Zoom url)
 * Set the travel buffer time (DO NOT CHANGE THE `const minsToMilliseconds` in line 31)
-* The number of days to sync events from your personal calendar. More days means it'll take more time.
 * Whether the script should skip all-day events and/or events on weekends. Note that setting `skipAllDayEvents = false` will only exclude multi-day events if they do not have set start/end times (e.g., something from 3pm on Wednesday through 4pm on Friday will still sync). Whether something occurs on a weekend is determined based on whether *both* the start and end times occurs on weekends. So, if `syncWeekdaysOnly = false`, something that starts on 3pm on Friday and ends on 3pm on Saturday will still sync, as will an event that is 3pm Sunday through 3pm Monday, but an event from 3pm Saturday to 3pm Sunday will *not* sync (since it's entirely over the weekend).
 * Whether the primary calendar should have default notifications enabled for holds and travel buffers
 * Whether the description for a hold on the primary/work calendar should have some default text (e.g., start with something about "This is a synced event"), or whether the hold description should also include the description from the secondary/personal calendar event. Note that setting `includeDescription = true` means that more information from your personal calendar will be present in your work calendar.
