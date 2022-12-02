@@ -1,7 +1,7 @@
 // Code inspired by https://janelloi.com/auto-sync-google-calendar/
 // which uses https://gist.github.com/ttrahan/a88febc0538315b05346f4e3b35997f2 
 
-var id="christine.a.odon@gmail.com"; // CHANGE - id of the secondary calendar to pull events from
+var id="XXX"; // CHANGE - id of the secondary calendar to pull events from
 const daysToSync = 70; // how many days out from today should the function look for events
 
 /*----- KNOWN (POTENTIAL) ISSUES -----
@@ -18,6 +18,10 @@ const daysToSync = 70; // how many days out from today should the function look 
 *     This means if there are 2 hold/events at the same time, and you delete one of those events 
 *     from your personal calendar, the script will try to delete the corresponding hold 
 *     and its travel time (if present). However, this is the most tenuous part of the process.
+* 6. If an event is removed from the secondary/personal calendar, the script will try to remove
+*     it (and travel buffers, if present) from the primary/work calendar. However, if somehow there
+*     are orphan travel buffers in the primary/work calendar without a hold event (e.g., you deleted
+*     the hold event manually), the script will not remove the orphan travle buffers.
 */
 
 
@@ -36,7 +40,9 @@ var syncWeekdaysOnly = true; // only sync events on weekdays (i.e., skip weekend
 var skipAllDayEvents = true; // only sync events with scheduled times (i.e., skip events that are all day or multi-day)
 
 var removeEventReminders = false; // if true, this will disable reminders on the primary calendar for all hold events
-var removeTravelReminders = false; // if true, this will disable reminders for travel buffers on the primary calendar
+var removeTravelBeforeReminders = false; // if true, this will disable reminders for travel buffers BEFORE synced events
+var removeTravelAfterReminders = true; // if true, this will disable reminders for travel buffers AFTER synced events
+var removeEventReminderIfTravelReminder = true; // if true, this will disable reminders for hold events IF removeTravelBeforeReminders is set to true
 
 var descriptionStart = ''; // if you want certain text in every primary calendar hold description, e.g., "This is synced from [email]"
 var includeDescription = false; // whether holds in the primary calendar should include the description from the secondary calendar
@@ -145,14 +151,38 @@ function eventCreate(cal, title, startTime, endTime, removeFlag, opt_event) {
   } catch (e) {
     newEvent = cal.createEvent(title, startTime, endTime, opt_event);
   }
-  if (removeFlag) {newEvent.removeAllReminders;}
+
+  newEvent.setVisibility(CalendarApp.Visibility.PRIVATE); // set blocked time as private appointments in work calendar
+  
+  
   if (checkEventLocation(newEvent)) {
     var newTravel = eventTravel(cal, getEventTitle(newEvent), startTime, endTime);
   } else {
     var newTravel = null;
   }
-  newEvent.setVisibility(CalendarApp.Visibility.PRIVATE); // set blocked time as private appointments in work calendar
+  
+  if (removeFlag) {
+    Logger.log(newEvent.getDescription()+' - flag to remove notifications');
+    newEvent.removeAllReminders();
+  } else if (removeEventReminderIfTravelReminder && (newTravel != null) && !removeTravelBeforeReminders) {
+    Logger.log(newEvent.getDescription()+' - because of travel, removing notifications');
+    newEvent.removeAllReminders();
+  } else {
+    Logger.log(newEvent.getDescription()+' - keeping notifications');
+  }
+
   return {event: newEvent, travel: newTravel}; 
+}
+
+// function for creating travel buffers
+// assumes opt_event is an object (or null) with a description
+function eventTravelCreate(cal, title, startTime, endTime, removeFlag, opt_event) {
+  newEventTravel = cal.createEvent(title, startTime, endTime, opt_event);
+  newEventTravel.setVisibility(CalendarApp.Visibility.PRIVATE); // set blocked time as private appointments in work calendar
+  if (removeFlag) {
+    newEventTravel.removeAllReminders();
+  } 
+  return newEventTravel; 
 }
 
 // function for updating events with location, description, and ensuring privacy
@@ -162,9 +192,6 @@ function eventCreate(cal, title, startTime, endTime, removeFlag, opt_event) {
 function eventUpdate(cal, eventsTravel, pEvent, removeFlag, secEvent) {
   pEvent.setDescription(createDescription(secEvent, descriptionStart));
   pEvent.setVisibility(CalendarApp.Visibility.PRIVATE); // set blocked time as private appointments in work calendar
-  if (removeFlag) {
-    pEvent.removeAllReminders();
-  }
   //location - check if it's changed
   var pLocation = pEvent.getLocation().trim();
   var secLocation = createLocation(secEvent);
@@ -177,6 +204,11 @@ function eventUpdate(cal, eventsTravel, pEvent, removeFlag, secEvent) {
     var pTravelDeleted = travelDelete(pEvent,getEventTitle(pEvent), eventsTravel);
     pEvent.setLocation(secLocation);
   }
+  if (removeFlag) {
+    pEvent.removeAllReminders();
+  } else if (removeEventReminderIfTravelReminder && ((pTravel != null) || (pLocation != '')) && !removeTravelBeforeReminders) {
+    pEvent.removeAllReminders();
+  }
 
   return {event: pEvent, newTravel: pTravel, deleteTravel: pTravelDeleted};
 }
@@ -186,22 +218,22 @@ function eventTravel(cal, eviTitle, eviStartTime, eviEndTime) {
   var travelStartTime = new Date(eviStartTime.getTime() - travelBuffer*minsToMilliseconds);
   var travelEndTime = new Date(eviEndTime.getTime() + travelBuffer*minsToMilliseconds);
 
-  var travelBefore = eventCreate(cal, primaryEventTravelTitle, travelStartTime, eviStartTime, 
-                                  removeTravelReminders, {description: 'Travel buffer: '+eviTitle});
+  var travelBefore = eventTravelCreate(cal, primaryEventTravelTitle, travelStartTime, eviStartTime, 
+                                        removeTravelBeforeReminders, {description: 'Travel buffer: '+eviTitle});
   Logger.log('TRAVEL BUFFER CREATED (BEFORE)' + 
-                '\nprimaryId: ' + travelBefore.event.getId() + 
-                '\nprimaryTitle: ' + travelBefore.event.getTitle() + 
-                '\nprimaryDesc ' + travelBefore.event.getDescription() + '\n');
+                '\nprimaryId: ' + travelBefore.getId() + 
+                '\nprimaryTitle: ' + travelBefore.getTitle() + 
+                '\nprimaryDesc ' + travelBefore.getDescription() + '\n');
 
-  var travelAfter = eventCreate(cal, primaryEventTravelTitle, eviEndTime, travelEndTime, 
-                                  removeTravelReminders, {description: 'Travel buffer: '+eviTitle});
+  var travelAfter = eventTravelCreate(cal, primaryEventTravelTitle, eviEndTime, travelEndTime, 
+                                        removeTravelAfterReminders, {description: 'Travel buffer: '+eviTitle});
   Logger.log('TRAVEL BUFFER CREATED (AFTER)' + 
-                '\nprimaryId: ' + travelAfter.event.getId() + 
-                '\nprimaryTitle: ' + travelAfter.event.getTitle() + 
-                '\nprimaryDesc ' + travelAfter.event.getDescription() + '\n');
+                '\nprimaryId: ' + travelAfter.getId() + 
+                '\nprimaryTitle: ' + travelAfter.getTitle() + 
+                '\nprimaryDesc ' + travelAfter.getDescription() + '\n');
 
   // return {travelBefore: travelBefore.getId(), travelAfter: travelAfter.getId()};
-  return [travelBefore.event.getId(), travelAfter.event.getId()];
+  return [travelBefore.getId(), travelAfter.getId()];
 }
 
 
@@ -247,6 +279,7 @@ function sync() {
   
   var secondaryCal=CalendarApp.getCalendarById(id);
   var secondaryEvents=secondaryCal.getEvents(today,enddate);
+  // var secondaryEvents=[]; // THIS WILL DELETE ALL HOLDS AND TRAVEL BUFFERS
   
   var primaryCal=CalendarApp.getDefaultCalendar();
   var primaryEvents=primaryCal.getEvents(today,enddate); // all primary calendar events
@@ -354,5 +387,4 @@ function sync() {
   Logger.log('Primary events created: ' + primaryEventsCreated.length);
   Logger.log('Primary travel buffers deleted: ' + primaryEventsTravelDeleted.length);
   Logger.log('Primary travel buffers created: ' + primaryEventsTravelCreated.length);
-
 }  
