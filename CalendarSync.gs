@@ -12,7 +12,7 @@
 *     2 holds on your primary, but if you delete one of those things, neither hold will be deleted.
 */
 
-var id="christine.a.odon@gmail.com"; // CHANGE - id of the secondary calendar to pull events from
+var id="XXX"; // CHANGE - id of the secondary calendar to pull events from
 
 /*----- CUSTOMIZEABLE OPTIONS -----*/
 // primary calendar = work calendar
