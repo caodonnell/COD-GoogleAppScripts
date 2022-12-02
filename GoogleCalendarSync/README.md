@@ -27,6 +27,7 @@ Note - if you have multiple personal Google calendars you want to sync, you'll h
 2. Scroll down in the left sidebar and click on the calendar you want to sync.
 
 ![Google calendar settings - click on the calendar you want to sync](images/personal-cal-settings.png)
+<img style='border:1px solid #000000' src="images/personal-cal-settings.png" width="80%">
 
 3. In that calendar's settings, find the "Share with specific people" section, and click on "Add people".
 4. Enter your work email and make sure "See all event details" is the permission setting. Click "Send".
