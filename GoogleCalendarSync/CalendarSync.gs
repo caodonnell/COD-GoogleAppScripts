@@ -4,7 +4,7 @@
 var id="XXX"; // CHANGE - id of the secondary calendar to pull events from
 
 /*----- KNOWN (POTENTIAL) ISSUES -----
-* 1. Travel buffer time is fixed. Currently not a variable
+* 1. Travel buffer time is fixed (currently set by the variable in line 24)
 * 2. Skips all-day events
 * 3. All events on the secondary calendar create holds on the primary calendar.
 *     So, if there are 2 events at the same time, you will get 2 holds at the same time.
