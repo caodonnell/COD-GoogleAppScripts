@@ -17,7 +17,11 @@ There are a few limits on the script as written:
 * The script currently ignores locations in the personal/secondary calendar that are Zoom URLs (which is determined by the presence of `.zoom.` in the location text). 
 * All events on the secondary/personal calendar will produce a hold on the primary/work calendar. So, if you have 2 events at the same time listed on your secondary calender, there will be 2 holds at the same time on your primary calendar as well.
 * The script will try to remove holds if events are removed from the secondary/personal calendar. To do this, the script checks event start/end times and the description to confirm if a hold on the primary calendar corresponds to something on your secondary/personal calendar. This means that if the scenario above happens (you have 2 or more events at the same time on your secondary/personal calendar, resulting in multiple holds at the same time on your primary/work calendar), and you delete one of the events from the secondary/personal calendar, it will try to delete the corresponding hold and travel buffers (if present) on the primary/work calendar by matching the time and the event description. However, I would consider this the most tenuous part of the script (i.e., the bit that's most likely to break).
-* If there are orphan travel buffers in the primary/work calendar (e.g., you manually deleted the hold event it was associated with), the script will *not* find the orphan travel buffers and delete them. In this situation, if the original event is still on the personal/secondary calendar, the script will generate a new hold on the primary/work calendar (since there's a personal event without a matching hold) and will also create new travel buffers. 
+* If there are orphan travel buffers in the primary/work calendar (e.g., you manually deleted the hold event it was associated with), the script will *not* find the orphan travel buffers and delete them. In this situation, if the original event is still on the personal/secondary calendar, the script will generate a new hold on the primary/work calendar (since there's a personal event without a matching hold) and will also create new travel buffers.
+
+Finally, because this script just parses information from the two calendars, it's not the fastest script. A more efficient approach would create a
+database that stores info about created holds/travel buffers, but that requires creating and managing an additional file in the
+user's Google Drive.
 
 ## How to use
 
@@ -58,11 +62,14 @@ Note - if you have multiple personal Google calendars you want to sync, you'll h
 
 5. Copy and paste the script from [my code](https://github.com/caodonnell/COD-GoogleAppScripts/blob/main/GoogleCalendarSync/CalendarSync.gs) into the window. 
 6. **YOU NEED TO ENTER YOUR CALENDAR ID IN LINE 4**. This is the ID you saved from A.5 above when checking out the settings of your personal calendar. **Replace the XXX, but make sure you don't remove the quotation marks or the semicolon at the end of the line.**
-7. *(Optional)* Line 5 is a variable for how many days out from today should the script sync events from your personal calendar. I set it to 70 (so, 10 weeks), which does mean the script can take a minute to run. Fewer days means that the script is faster, but that means if you're trying to plan something further out, things may not have synced yet from the personal calendar. Additionally, line 6 has a variable for whether the hold/buffer event descriptions in the primary/work calendar include the title of the event from the personal/secondary calendar (`true` means it will include the title, `false` means it will use an event id instead). If you edit either line, please ensure that the semicolon is not deleted. 
+7. *(Optional)* Edit lines 5-7, taking care to ensure any semicolons are not deleted.
+  - Line 5 is a variable for how many days out from today should the script sync events from your personal calendar. I set it to 70 (so, 10 weeks), which does mean the script can take a minute to run. Fewer days means that the script is faster, but that means if you're trying to plan something further out, things may not have synced yet from the personal calendar. 
+  - Line 6 is a variable for how long of a travel buffer should be set before and after events with a location. The value of the variable should be in minutes. If you do not want travel buffers, make this a negative number (e.g., `-30` or `-1`).
+  - Line 7 has a variable for whether the hold/buffer event descriptions in the primary/work calendar include the title of the event from the personal/secondary calendar (`true` means it will include the title, `false` means it will use an event id instead). 
 8. Press the floppy disk icon to Save the code.
 9. Click "Run" to execute the script. Google will ask you for permission to run the script, since it does read and edit your calendar. Please grant it all of the permissions it requires. As the script runs, there will be some output at the bottom of the screen in the Execution Log. If it completes successfully, the last line in the log should be yellow and say "Execution completed" (you may need to scroll down to see it). If the log ends with a red line and an error message, check that you copied the entire script and entered your calendar ID correctly.
 
-> ![Copy and paste the calendar sync script, and edit line 4 to include your personal calendar ID. Then save and run the script before clicking on the clock icon to set up an automation](images/script-edit-v3.png)
+> ![Copy and paste the calendar sync script, and edit line 4 to include your personal calendar ID. Then save and run the script before clicking on the clock icon to set up an automation](images/script-edit-v4.png)
 
 10. Check that everything worked correctly by going through your calendar to see if events and travel buffers appear as expected.
 
@@ -79,7 +86,7 @@ Note - if you have multiple personal Google calendars you want to sync, you'll h
 > ![Parameters for setting up a trigger so that the script will automatically run when you update your personal calendar](images/trigger-setup.png)
 
 ### E. Optional: Change settings in the script
-Lines 31-52 include a variety of things you can change, including
+Lines 41-55 include a variety of things you can change, including
 * Default titles for holds and travel buffers on the primary/work calendar 
 * Default text for events with a location (that isn't a Zoom url)
 * Set the travel buffer time (DO NOT CHANGE THE `const minsToMilliseconds` in line 31)
