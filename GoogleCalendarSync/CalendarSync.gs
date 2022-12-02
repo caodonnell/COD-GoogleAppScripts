@@ -2,7 +2,7 @@
 // which uses https://gist.github.com/ttrahan/a88febc0538315b05346f4e3b35997f2 
 
 var id="christine.a.odon@gmail.com"; // CHANGE - id of the secondary calendar to pull events from
-
+const daysToSync = 70; // how many days out from today should the function look for events
 
 /*----- KNOWN (POTENTIAL) ISSUES -----
 * 1. The amount of time for the travel buffer events is fixed (currently set by the variable in line 31).
@@ -31,8 +31,6 @@ var primaryEventLocation = "[Travel required]"; // to sync a location (that isn'
 
 var travelBuffer = 30; // in minutes
 const minsToMilliseconds = 60000; // convert minutes to milliseconds
-
-const daysToSync = 70; // how many days out from today should the function look for events
 
 var syncWeekdaysOnly = true; // only sync events on weekdays (i.e., skip weekends)
 var skipAllDayEvents = true; // only sync events with scheduled times (i.e., skip events that are all day or multi-day)
