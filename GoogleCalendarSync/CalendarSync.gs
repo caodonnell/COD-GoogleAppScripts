@@ -46,7 +46,7 @@ var skipAllDayEvents = true; // only sync events with scheduled times (i.e., ski
 var removeEventReminders = false; // if true, this will disable reminders on the primary calendar for all hold events
 var removeTravelBeforeReminders = false; // if true, this will disable reminders for travel buffers BEFORE synced events
 var removeTravelAfterReminders = true; // if true, this will disable reminders for travel buffers AFTER synced events
-var removeEventReminderIfTravelReminder = true; // if true, this will disable reminders for hold events IF removeTravelBeforeReminders is set to true
+var removeEventReminderIfTravelReminder = true; // if true, this will disable reminders for hold events IF removeTravelBeforeReminders is set to true and travel does happen
 
 var descriptionStart = ''; // if you want certain text in every primary calendar hold description, e.g., "This is synced from [email]"
 var includeDescription = false; // whether holds in the primary calendar should include the description from the secondary calendar
