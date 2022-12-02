@@ -58,11 +58,11 @@ Note - if you have multiple personal Google calendars you want to sync, you'll h
 
 5. Copy and paste the script from [my code](https://github.com/caodonnell/COD-GoogleAppScripts/blob/main/GoogleCalendarSync/CalendarSync.gs) into the window. 
 6. **YOU NEED TO ENTER YOUR CALENDAR ID IN LINE 4**. This is the ID you saved from A.5 above when checking out the settings of your personal calendar. **Replace the XXX, but make sure you don't remove the quotation marks or the semicolon at the end of the line.**
-7. *(Optional)* Line 5 is a variable for how many days out from today should the script sync events from your personal calendar. I set it to 70 (so, 10 weeks), which does mean the script can take a minute to run. Fewer days means that the script is faster, but that means if you're trying to plan something further out, things may not have synced yet from the personal calendar. If you edit the number, please ensure that the semicolon is not deleted.
+7. *(Optional)* Line 5 is a variable for how many days out from today should the script sync events from your personal calendar. I set it to 70 (so, 10 weeks), which does mean the script can take a minute to run. Fewer days means that the script is faster, but that means if you're trying to plan something further out, things may not have synced yet from the personal calendar. Additionally, line 6 has a variable for whether the hold/buffer event descriptions in the primary/work calendar include the title of the event from the personal/secondary calendar (`true` means it will include the title, `false` means it won't). If you edit either line, please ensure that the semicolon is not deleted. 
 8. Press the floppy disk icon to Save the code.
 9. Click "Run" to execute the script. Google will ask you for permission to run the script, since it does read and edit your calendar. Please grant it all of the permissions it requires. As the script runs, there will be some output at the bottom of the screen in the Execution Log. If it completes successfully, the last line in the log should be yellow and say "Execution completed" (you may need to scroll down to see it). If the log ends with a red line and an error message, check that you copied the entire script and entered your calendar ID correctly.
 
-> ![Copy and paste the calendar sync script, and edit line 4 to include your personal calendar ID. Then save and run the script before clicking on the clock icon to set up an automation](images/script-edit-v2.png)
+> ![Copy and paste the calendar sync script, and edit line 4 to include your personal calendar ID. Then save and run the script before clicking on the clock icon to set up an automation](images/script-edit-v3.png)
 
 10. Check that everything worked correctly by going through your calendar to see if events and travel buffers appear as expected.
 
@@ -79,7 +79,7 @@ Note - if you have multiple personal Google calendars you want to sync, you'll h
 > ![Parameters for setting up a trigger so that the script will automatically run when you update your personal calendar](images/trigger-setup.png)
 
 ### E. Optional: Change settings in the script
-Lines 34-52 include a variety of things you can change, including
+Lines 31-52 include a variety of things you can change, including
 * Default titles for holds and travel buffers on the primary/work calendar 
 * Default text for events with a location (that isn't a Zoom url)
 * Set the travel buffer time (DO NOT CHANGE THE `const minsToMilliseconds` in line 31)
