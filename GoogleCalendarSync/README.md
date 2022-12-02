@@ -16,7 +16,8 @@ There are a few limits on the script as written:
 * Currently, all holds and travel buffers on the primary/work calendar REQUIRE the event title from the personal/secondary calendar. Otherwise, the script's methodology for recognizing holds are already present and for deleting holds will not function.
 * The script currently ignores locations in the personal/secondary calendar that are Zoom URLs (which is determined by the presence of `.zoom.` in the location text). 
 * All events on the secondary/personal calendar will produce a hold on the primary/work calendar. So, if you have 2 events at the same time listed on your secondary calender, there will be 2 holds at the same time on your primary calendar as well.
-* The script will try to remove holds if events are removed from the secondary/personal calendar. To do this, the script checks event start/end times and the description (which for travel events is "Travel buffer: [event title]") to confirm if a hold on the primary calendar corresponds to something on your secondary/personal calendar. This means that if the scenario above happens (you have 2 or more events at the same time on your secondary/personal calendar, resulting in multiple holds at the same time on your primary/work calendar), and you delete one of the events from the secondary/personal calendar, it will try to delete the corresponding hold and travel buffers (if present) on the primary/work calendar by matching the time and the event description. However, I would consider this the most tenuous part of the script (i.e., the bit that's most likely to break)
+* The script will try to remove holds if events are removed from the secondary/personal calendar. To do this, the script checks event start/end times and the description (which for travel events is "Travel buffer: [event title]") to confirm if a hold on the primary calendar corresponds to something on your secondary/personal calendar. This means that if the scenario above happens (you have 2 or more events at the same time on your secondary/personal calendar, resulting in multiple holds at the same time on your primary/work calendar), and you delete one of the events from the secondary/personal calendar, it will try to delete the corresponding hold and travel buffers (if present) on the primary/work calendar by matching the time and the event description. However, I would consider this the most tenuous part of the script (i.e., the bit that's most likely to break).
+* If there are orphan travel buffers in the primary/work calendar (e.g., you manually deleted the hold event it was associated with), the script will *not* find the orphan travel buffers and delete them. In this situation, if the original event is still on the personal/secondary calendar, the script will generate a new hold on the primary/work calendar (since there's a personal event without a matching hold) and will also create new travel buffers. 
 
 ## How to use
 
@@ -78,7 +79,7 @@ Note - if you have multiple personal Google calendars you want to sync, you'll h
 > ![Parameters for setting up a trigger so that the script will automatically run when you update your personal calendar](images/trigger-setup.png)
 
 ### E. Optional: Change settings in the script
-Lines 28-42 include a variety of things you can change, including
+Lines 32-47 include a variety of things you can change, including
 * Default titles for holds and travel buffers on the primary/work calendar 
 * Default text for events with a location (that isn't a Zoom url)
 * Set the travel buffer time (DO NOT CHANGE THE `const minsToMilliseconds` in line 31)
