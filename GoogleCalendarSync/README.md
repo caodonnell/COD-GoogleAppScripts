@@ -50,19 +50,19 @@ Note - if you have multiple personal Google calendars you want to sync, you'll h
 
 ![Create a new Google Apps Script in Google Drive](images/create-script.png)
 
-4. Rename the script by clicking on the title "Untitled Project" and rename it something like "Calendar Sync" (or whatever makes the most sense to you - this process does not depend on the script name).
-5. You should see `function myFunction()` and some brackets in the main window. Delete all of this text.
+3. Rename the script by clicking on the title "Untitled Project" and rename it something like "Calendar Sync" (or whatever makes the most sense to you - this process does not depend on the script name).
+4. You should see `function myFunction()` and some brackets in the main window. Delete all of this text.
 
 ![Name the script, and delete the existing text](images/script-setup.png)
 
-7. Copy and paste the script from [my code](https://github.com/caodonnell/COD-GoogleAppScripts/blob/main/GoogleCalendarSync/CalendarSync.gs) into the window. You need to copy everything.
-8. **YOU NEED TO ENTER YOUR CALENDAR ID IN LINE 4**. This is the ID you saved from A.5 above when checking out the settings of your personal calendar. **Replace the XXX, but make sure you don't remove the quotation marks or the semicolon at the end of the line.**
-9. Press the floppy disk icon to Save the code.
+5. Copy and paste the script from [my code](https://github.com/caodonnell/COD-GoogleAppScripts/blob/main/GoogleCalendarSync/CalendarSync.gs) into the window. You need to copy everything.
+6. **YOU NEED TO ENTER YOUR CALENDAR ID IN LINE 4**. This is the ID you saved from A.5 above when checking out the settings of your personal calendar. **Replace the XXX, but make sure you don't remove the quotation marks or the semicolon at the end of the line.**
+7. Press the floppy disk icon to Save the code.
 11. Click "Run" to execute the script. Google will ask you for permission to run the script, since it does read and edit your calendar. Please grant it all of the permissions it requires. As the script runs, there will be some output at hte bottom of the screen in the Execution Log. If it completes successfully, the last line in the log should be yellow and say "Execution completed" (you may need to scroll down to see it). Depending on how many days out you want to sync events from your personal calendar and how many events there are to sync, the script might take a minute. If the log ends with a red line and an error message, check that you copied the entire script and entered your calendar ID correctly.
 
 ![Copy and paste the calendar sync script, and edit line 4 to include your personal calendar ID. Then save and run the script before clicking on the clock icon to set up an automation](images/script-edit.png)
 
-13. Check that everything worked correctly by going through your calendar to see if events and travel buffers appear as expected.
+8. Check that everything worked correctly by going through your calendar to see if events and travel buffers appear as expected.
 
 ### D. Set up automation so the script will run every time you update your personal calendar
 1. In the Apps Script window, click the clock icon on the left sidebar. There should be a "Add trigger" button in the bottom right of the main window. 
