@@ -54,6 +54,9 @@ var removeEventReminderIfTravelReminder = true; // if true, this will disable re
 var descriptionStart = ''; // if you want certain text in every primary calendar hold description, e.g., "This is synced from [email]"
 var includeDescription = false; // whether holds in the primary calendar should include the description from the secondary calendar
 
+
+/*----- OPTIONS YOU PROBABLY SHOULDN'T CHANGE -----*/
+
 // DO NOT CHANGE THIS UNLESS YOU REALLY WANT TO TRY TO DELETE 
 // ALL OF THE HOLDS AND TRAVEL BUFFERS ON YOUR PRIMARY CALENDAR
 // note - this will fail if you changed things like the primaryEventTitle,
@@ -214,7 +217,6 @@ function eventUpdate(cal, eventsTravel, pEvent, secEvent) {
     }
   }
   
-
   return {event: pEvent, newTravel: pTravel, deleteTravel: pTravelDeleted};
 }
 
@@ -297,7 +299,6 @@ function sync() {
   
   var primaryCal=CalendarApp.getDefaultCalendar();
   var primaryEvents=primaryCal.getEvents(today,enddate); // all primary calendar events
-
   
   var stat=1;
   var evi, existingEvent; 
@@ -308,7 +309,6 @@ function sync() {
   var primaryEventsTravelCreated = []; // to contain primary calendar travel buffer events that were created
   var primaryEventsDeleted = []; // to contain primary calendar events previously created that have been deleted from secondary calendar
   var primaryEventsTravelDeleted = []; // to contain primary calendar travel buffer events that were deleted
-  
 
   Logger.log('Number of primaryEvents: ' + primaryEvents.length);  
   Logger.log('Number of secondaryEvents: ' + secondaryEvents.length);
