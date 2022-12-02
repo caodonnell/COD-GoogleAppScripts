@@ -12,19 +12,11 @@ for personal events and activities. It will also create events for travel/buffer
 calendar that have a set location that is not a Zoom link.
 
 There are a few limits on the script as written:
-* Travel buffer time is a fixed amount of time (currently set by the variable in line 24)
-* The script will skip all-day events. However, if an event starts at a certain time on one day (e.g., 3pm on Wednesday) and runs into another day (e.g., 4pm on Friday), it will sync that event.
+* Travel buffer time is a fixed amount of time.
+* Currently, all holds and travel buffers on the primary/work calendar REQUIRE the event title from the personal/secondary calendar. Otherwise, the script's methodology for recognizing holds are already present and for deleting holds will not function.
+* The script currently ignores locations in the personal/secondary calendar that are Zoom URLs (which is determined by the presence of `.zoom.` in the location text). 
 * All events on the secondary/personal calendar will produce a hold on the primary/work calendar. So, if you have 2 events at the same time listed on your secondary calender, there will be 2 holds at the same time on your primary calendar as well.
-* The script will try to remove holds if events are removed from the secondary/personal calendar. To do this, the script checks event start/end times and the description (which for travel events is "Travel buffer: [event title]" to confirm if a hold on the primary calendar corresponds to something on your secondary/personal calendar. This means that if the scenario above happens (you have 2 or more events at the same time on your secondary/personal calendar, resulting in multiple holds at the same time on your primary/work calendar), and you delete one of the events from the secondary/personal calendar, it will *not* delete the corresponding hold on the primary/work calendar. In a future iteration, I will try to also compare the event description, but that 
-
-* 1. 
-* 2. Skips all-day events
-* 3. All events on the secondary calendar create holds on the primary calendar.
-*     So, if there are 2 events at the same time, you will get 2 holds at the same time.
-* 3. When checking whether something should be updated on the primary calendar 
-*     (e.g., because it was deleted in the secondary calendar), it ONLY checks the event time.
-*     This means if there are 2 things in your personal calendar at the same time, you will get 
-*     2 holds on your primary, but if you delete one of those things, neither hold will be deleted.
+* The script will try to remove holds if events are removed from the secondary/personal calendar. To do this, the script checks event start/end times and the description (which for travel events is "Travel buffer: [event title]") to confirm if a hold on the primary calendar corresponds to something on your secondary/personal calendar. This means that if the scenario above happens (you have 2 or more events at the same time on your secondary/personal calendar, resulting in multiple holds at the same time on your primary/work calendar), and you delete one of the events from the secondary/personal calendar, it will try to delete the corresponding hold and travel buffers (if present) on the primary/work calendar by matching the time and the event description. However, I would consider this the most tenuous part of the script (i.e., the bit that's most likely to break)
 
 ## How to use
 To use the script, you can largely follow the directions at [this blog post](https://janelloi.com/auto-sync-google-calendar/).
@@ -53,4 +45,23 @@ Note - if you have multiple personal Google calendars you want to sync, you'll h
 6. **YOU NEED TO ENTER YOUR CALENDAR ID IN LINE 4**. This is the ID you saved from A.5 above when checking out the settings of your personal calendar. Replace the XXX, but make sure you don't remove the quotation marks or the semicolon at the end of the line.
 7. Press the floppy disk icon to Save the code.
 8. Click "Run" to execute the script. Google will ask you for permission to run the script, since it does read and edit your calendar. Please grant it all of the permissions it requires. As the script runs, there will be some output at hte bottom of the screen in the Execution Log. If it completes successfully, the last line in the log should be yellow and say "Execution completed" (you may need to scroll down to see it). Depending on how many days out you want to sync events from your personal calendar and how many events there are to sync, the script might take a minute. If the log ends with a red line and an error message, check that you copied the entire script and entered your calendar ID correctly.
-9. Check that everything worked correctly by 
+9. Check that everything worked correctly by going through your calendar to see if events and travel buffers appear as expected.
+
+### D. Set up automation so the script will run every time you update your personal calendar
+1. In the Apps Script window, click the clock icon on the left sidebar. There should be a "Add trigger" button in the bottom right of the main window. 
+2. Click on "Add Trigger".
+3. Edit the trigger settings to be the following:
+  - Choose which function to run: **sync**
+  - Which runs at deployment: **Head** (this should be the default setting)
+  - Select event source: **From calendar**
+  - Enter calendar details: **Calendar updated** and then enter the **email associated with your personal calendar**
+
+### E. Optional: Change settings in the script
+Lines 26-42 include a variety of things you can change, including
+* Default titles for holds and travel buffers on the primary/work calendar 
+* Default text for events with a location (that isn't a Zoom url)
+* Set the travel buffer time (DO NOT CHANGE THE `const minsToMilliseconds` in line 31)
+* The number of days to sync events from your personal calendar. More days means it'll take more time.
+* Whether the script should skip all-day events and/or events on weekends. Note that setting `skipAllDayEvents = false` will only exclude multi-day events if they do not have set start/end times (e.g., something from 3pm on Wednesday through 4pm on Friday will still sync). Whether something occurs on a weekend is determined based on whether *both* the start and end times occurs on weekends. So, if `syncWeekdaysOnly = false`, something that starts on 3pm on Friday and ends on 3pm on Saturday will still sync, as will an event that is 3pm Sunday through 3pm Monday, but an event from 3pm Saturday to 3pm Sunday will *not* sync (since it's entirely over the weekend).
+* Whether the primary calendar should have default notifications enabled for holds and travel buffers
+* Whether the description for a hold on the primary/work calendar should have some default text (e.g., start with something about "This is a synced event"), or whether the hold description should also include the description from the secondary/personal calendar event. Note that setting `includeDescription = true` means that more information from your personal calendar will be present in your work calendar.
