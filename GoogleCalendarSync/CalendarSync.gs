@@ -1,7 +1,7 @@
 // Code inspired by https://janelloi.com/auto-sync-google-calendar/
 // which uses https://gist.github.com/ttrahan/a88febc0538315b05346f4e3b35997f2 
 
-var id="XXX"; // CHANGE - id of the secondary calendar to pull events from
+var id="christine.a.odon@gmail.com"; // CHANGE - id of the secondary calendar to pull events from
 const daysToSync = 70; // how many days out from today should the function look for events
 
 /*----- KNOWN (POTENTIAL) ISSUES -----
@@ -143,7 +143,7 @@ function createDescription(evi, str) {
 // in which case the function will try to create the description and location from it
 // but if that fails, then it assumes options is an object array that includes that info already (or null)
 // removeFlag = boolean for whether to remove reminders
-function eventCreate(cal, title, startTime, endTime, removeFlag, opt_event) {
+function eventCreate(cal, title, startTime, endTime, opt_event) {
   try {
     var description = createDescription(opt_event, descriptionStart);
     var location = createLocation(opt_event);
@@ -161,14 +161,14 @@ function eventCreate(cal, title, startTime, endTime, removeFlag, opt_event) {
     var newTravel = null;
   }
   
-  if (removeFlag) {
-    Logger.log(newEvent.getDescription()+' - flag to remove notifications');
+  if (removeEventReminders) {
+    // Logger.log(newEvent.getDescription()+' - flag to remove notifications');
     newEvent.removeAllReminders();
   } else if (removeEventReminderIfTravelReminder && (newTravel != null) && !removeTravelBeforeReminders) {
-    Logger.log(newEvent.getDescription()+' - because of travel, removing notifications');
+    // Logger.log(newEvent.getDescription()+' - because of travel, removing notifications');
     newEvent.removeAllReminders();
   } else {
-    Logger.log(newEvent.getDescription()+' - keeping notifications');
+    // Logger.log(newEvent.getDescription()+' - keeping notifications');
   }
 
   return {event: newEvent, travel: newTravel}; 
@@ -189,7 +189,7 @@ function eventTravelCreate(cal, title, startTime, endTime, removeFlag, opt_event
 // pEvent = hold that's being put in the primary calendar
 // secEvent = original event in the secondary/personal calendar
 // removeFlag = boolean for whether to remove reminders
-function eventUpdate(cal, eventsTravel, pEvent, removeFlag, secEvent) {
+function eventUpdate(cal, eventsTravel, pEvent, secEvent) {
   pEvent.setDescription(createDescription(secEvent, descriptionStart));
   pEvent.setVisibility(CalendarApp.Visibility.PRIVATE); // set blocked time as private appointments in work calendar
   //location - check if it's changed
@@ -204,7 +204,7 @@ function eventUpdate(cal, eventsTravel, pEvent, removeFlag, secEvent) {
     var pTravelDeleted = travelDelete(pEvent,getEventTitle(pEvent), eventsTravel);
     pEvent.setLocation(secLocation);
   }
-  if (removeFlag) {
+  if (removeEventReminders) {
     pEvent.removeAllReminders();
   } else if (removeEventReminderIfTravelReminder && ((pTravel != null) || (pLocation != '')) && !removeTravelBeforeReminders) {
     pEvent.removeAllReminders();
@@ -338,7 +338,7 @@ function sync() {
         var pEvent = primaryEventsFiltered[existingEvent];
         if (compareEvents(pEvent, evi)) {
           stat=0;
-          var pEventTravel = eventUpdate(primaryCal, primaryEventsTravel, pEvent, removeEventReminders, evi);
+          var pEventTravel = eventUpdate(primaryCal, primaryEventsTravel, pEvent, evi);
           var pEvent = pEventTravel.event;
           primaryEventsUpdated.push(pEvent.getId());
           if (pEventTravel.newTravel != null) { primaryEventsTravelCreated = primaryEventsTravelCreated.concat(pEventTravel.newTravel); }
@@ -357,7 +357,7 @@ function sync() {
     if (checkEventDay(evi)) {
       var eviStartTime = evi.getStartTime();
       var eviEndTime = evi.getEndTime();
-      var newEventTravel = eventCreate(primaryCal, primaryEventTitle, eviStartTime, eviEndTime, removeEventReminders, evi);
+      var newEventTravel = eventCreate(primaryCal, primaryEventTitle, eviStartTime, eviEndTime, evi);
       var newEvent = newEventTravel.event;
       if (newEventTravel.travel != null) { primaryEventsTravelCreated = primaryEventsTravelCreated.concat(newEventTravel.travel); }
       primaryEventsCreated.push(newEvent.getId());
