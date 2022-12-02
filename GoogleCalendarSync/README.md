@@ -19,14 +19,13 @@ There are a few limits on the script as written:
 * The script will try to remove holds if events are removed from the secondary/personal calendar. To do this, the script checks event start/end times and the description (which for travel events is "Travel buffer: [event title]") to confirm if a hold on the primary calendar corresponds to something on your secondary/personal calendar. This means that if the scenario above happens (you have 2 or more events at the same time on your secondary/personal calendar, resulting in multiple holds at the same time on your primary/work calendar), and you delete one of the events from the secondary/personal calendar, it will try to delete the corresponding hold and travel buffers (if present) on the primary/work calendar by matching the time and the event description. However, I would consider this the most tenuous part of the script (i.e., the bit that's most likely to break)
 
 ## How to use
-To use the script, you can largely follow the directions at [this blog post](https://janelloi.com/auto-sync-google-calendar/).
-I've recorded some of the key steps below.
 
 Note - if you have multiple personal Google calendars you want to sync, you'll have to repeat the steps below for each calendar.
 
 ### A. Set up your personal Google calendar so that it can be synced
 1. In your personal calendar, access your [settings](https://calendar.google.com/calendar/u/0/r/settings).
 2. Scroll down in the left sidebar and click on the calendar you want to sync.
+![Google calendar settings - click on the calendar you want to sync](https://github.com/caodonnell/COD-GoogleAppScripts/blob/main/GoogleCalendarSync/images/personal-cal-settings.png?raw=true)
 3. In that calendar's settings, find the "Share with specific people" section, and click on "Add people".
 4. Enter your work email and make sure "See all event details" is the permission setting. Click "Send".
 5. We'll also need the Calendar ID for the next steps, so scroll through the calendar's settings until you see "Integrate calendar". The first item in that section will be "Calendar ID"; if this is the main calendar for a personal Gmail account, the ID will probably be your email address. Save your ID.
