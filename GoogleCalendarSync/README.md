@@ -86,7 +86,7 @@ Note - if you have multiple personal Google calendars you want to sync, you'll h
 > ![Parameters for setting up a trigger so that the script will automatically run when you update your personal calendar](images/trigger-setup.png)
 
 ### E. Optional: Change settings in the script
-Lines 41-55 include a variety of things you can change, including
+Lines 42-56 include a variety of things you can change, including
 * Default titles for holds and travel buffers on the primary/work calendar 
 * Default text for events with a location (that isn't a Zoom url)
 * Set the travel buffer time (DO NOT CHANGE THE `const minsToMilliseconds` in line 31)
