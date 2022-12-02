@@ -55,7 +55,7 @@ Note - if you have multiple personal Google calendars you want to sync, you'll h
 
 > ![Name the script, and delete the existing text](images/script-setup.png)
 
-5. Copy and paste the script from [my code](https://github.com/caodonnell/COD-GoogleAppScripts/blob/main/GoogleCalendarSync/CalendarSync.gs) into the window. You need to copy everything.
+5. Copy and paste the script from [my code](https://github.com/caodonnell/COD-GoogleAppScripts/blob/main/GoogleCalendarSync/CalendarSync.gs) into the window. Make sure you have all 360 lines!
 6. **YOU NEED TO ENTER YOUR CALENDAR ID IN LINE 4**. This is the ID you saved from A.5 above when checking out the settings of your personal calendar. **Replace the XXX, but make sure you don't remove the quotation marks or the semicolon at the end of the line.**
 7. *(Optional)* Line 5 is a variable for how many days out from today should the script sync events from your personal calendar. I set it to 70 (so, 10 weeks), which does mean the script can take a minute to run. Fewer days means that the script is faster, but that means if you're trying to plan something further out, things may not have synced yet from the personal calendar.
 8. Press the floppy disk icon to Save the code.
