@@ -8,7 +8,8 @@ var includeTitle = true; // whether the holds and travel buffers include the per
 
 
 /*----- KNOWN (POTENTIAL) ISSUES -----
-* 1. The amount of time for the travel buffer events is fixed (currently set by the variable in line 31).
+* 1. The amount of time for the travel buffer events is fixed (currently set by the variable in line 6).
+*     If you change the travel time value, the script will not change existing travel buffers.
 * 2. The script requires that the description of the holds and travel buffers (if applicable) have a unique 
 *     name/identifier. By default, this is the title of the original event in the personal/secondary 
 *     calendar, but if includeTitle (line 50) is false, it will use the event id instead,
