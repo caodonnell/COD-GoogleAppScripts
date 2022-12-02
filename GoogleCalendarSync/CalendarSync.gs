@@ -1,6 +1,8 @@
 // Code inspired by https://janelloi.com/auto-sync-google-calendar/
 // which uses https://gist.github.com/ttrahan/a88febc0538315b05346f4e3b35997f2 
 
+var id="XXX"; // CHANGE - id of the secondary calendar to pull events from
+
 /*----- KNOWN (POTENTIAL) ISSUES -----
 * 1. Travel buffer time is fixed. Currently not a variable
 * 2. Skips all-day events
@@ -11,8 +13,6 @@
 *     This means if there are 2 things in your personal calendar at the same time, you will get 
 *     2 holds on your primary, but if you delete one of those things, neither hold will be deleted.
 */
-
-var id="XXX"; // CHANGE - id of the secondary calendar to pull events from
 
 /*----- CUSTOMIZEABLE OPTIONS -----*/
 // primary calendar = work calendar
