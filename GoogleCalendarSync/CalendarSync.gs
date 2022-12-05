@@ -8,8 +8,7 @@ var includeTitle = true; // whether the holds and travel buffers include the per
 
 
 /*----- KNOWN (POTENTIAL) ISSUES -----
-* 1. The amount of time for the travel buffer events is fixed (currently set by the variable in line 6).
-*     If you change the travel time value, the script will not change existing travel buffers.
+* 1. The amount of time for the travel buffer events is fixed (currently set by the variable in line 31).
 * 2. The script requires that the description of the holds and travel buffers (if applicable) have a unique 
 *     name/identifier. By default, this is the title of the original event in the personal/secondary 
 *     calendar, but if includeTitle (line 50) is false, it will use the event id instead,
@@ -31,11 +30,12 @@ var includeTitle = true; // whether the holds and travel buffers include the per
 
 // NOTE: This script only uses data from the two calendars. 
 // A more efficient script would create a database to store info on created events
-// (which simplifies updating holds and buffers), but that means there would be an
-// additional file stored in Google Drive
+// (which simplifies updating holds and buffers), but that means there would be 
+// additional file(s) stored in Google Drive
 
 
 /*----- CUSTOMIZEABLE OPTIONS -----*/
+// some definitions...
 // primary calendar = work calendar
 // secondary calendar = personal calendar, which is the source of events to sync
 
@@ -47,6 +47,10 @@ var primaryEventLocation = "[Travel required]"; // to sync a location (that isn'
 var syncWeekdaysOnly = true; // only sync events on weekdays (i.e., skip weekends)
 var skipAllDayEvents = true; // only sync events with scheduled times (i.e., skip events that are all day or multi-day)
 
+// if out of office on primary/work calendar during a personal event, don't sync
+// NOTE: REQUIRES USING the "Out of office" event type in Google Calendar
+var checkOutOfOffice = true; 
+
 var removeEventReminders = false; // if true, this will disable reminders on the primary calendar for all hold events
 var removeTravelBeforeReminders = false; // if true, this will disable reminders for travel buffers BEFORE synced events
 var removeTravelAfterReminders = true; // if true, this will disable reminders for travel buffers AFTER synced events
@@ -55,6 +59,10 @@ var removeEventReminderIfTravelReminder = true; // if true, this will disable re
 var descriptionStart = ''; // if you want certain text in every primary calendar hold description, e.g., "This is synced from [email]"
 var includeDescription = false; // whether holds in the primary calendar should include the description from the secondary calendar
 
+// to prevent multiple runs at the same time (from updating multiple events on the personal calendar)
+// the script uses LockServices to hold additional runs 
+// this should be several times the estimated maximum time of a single run
+var maxLockWaitTime = 600; // in seconds
 
 /*----- OPTIONS YOU PROBABLY SHOULDN'T CHANGE -----*/
 
@@ -66,6 +74,24 @@ var clearAllHolds = false; // will try to delete all holds, travel buffers on th
 
 // DO NOT CHANGE THIS PARAMTER - required for creating travel buffers
 const minsToMilliseconds = 60000; // convert minutes to milliseconds
+
+
+/*----- MAIN FUNCTION -----*/
+// calls the sync function, wrapped with LockService to avoid multiple 
+// parallel iterations (which will cause errors, e.g., if something is
+// deleted from the personal calendar during the run, trigger a second execution)
+function mainFcn() {
+  var lock = LockService.getScriptLock();
+  lock.tryLock(maxLockWaitTime * 1000); // convert to milliseconds
+  if (lock.hasLock()) {
+    sync();
+    lock.releaseLock();
+  } else {
+    Logger.log('Could not obtain lock after 60 seconds.');
+    Error('Lock service failed. Maybe another execution is still running?');
+  }
+  lock.releaseLock();
+}
 
 
 /*----- CUSTOMIZEABLE HELPER FUNCTIONS -----*/
@@ -85,6 +111,7 @@ function compareEvents(primaryEvent, secondaryEvent) {
 
 // check whether an event is within the days that are being synced
 // uses the syncWeekdaysOnly variable above
+// true: event is on a weekday, or syncWeekdaysOnly not enabled
 function checkEventDay(evi) {
   if (syncWeekdaysOnly) {
     var startDay = evi.getStartTime().getDay();
@@ -96,6 +123,25 @@ function checkEventDay(evi) {
   }
   // Logger.log(evi.getTitle()+': '+day)
   return true;
+}
+
+// check if marked out of office on the primary/work calendar
+// if so, then don't need to sync the event
+// true: primary/work calendar is OOO
+function checkOOOstatus(evi) {
+  if (checkOutOfOffice) {
+    var resource = {
+      timeMin: Utilities.formatDate(evi.getStartTime(), 'UTC', 'yyyy-MM-dd\'T\'HH:mm:ssZ'),
+      timeMax: Utilities.formatDate(evi.getEndTime(), 'UTC', 'yyyy-MM-dd\'T\'HH:mm:ssZ'),
+      // q: "Out of office"
+    };
+    var outOffice = Calendar.Events.list('primary', resource).items.filter(x => x.eventType == 'outOfOffice');
+    Logger.log(outOffice);
+    if (outOffice.length > 0) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // if there is a location in the secondary calendar event
@@ -171,6 +217,9 @@ function eventCreate(cal, title, startTime, endTime, opt_event) {
     // Logger.log(newEvent.getDescription()+' - keeping notifications');
   //}
 
+  Logger.log('PRIMARY EVENT CREATED' + 
+              '\nprimaryId: ' + newEvent.getId() + 
+              '\nprimaryDesc ' + newEvent.getDescription() + '\n');
   return {event: newEvent, travel: newTravel}; 
 }
 
@@ -190,7 +239,8 @@ function eventTravelCreate(cal, title, startTime, endTime, removeFlag, opt_event
 // secEvent = original event in the secondary/personal calendar
 // removeFlag = boolean for whether to remove reminders
 function eventUpdate(cal, eventsTravel, pEvent, secEvent) {
-  pEvent.setDescription(createDescription(secEvent));
+  var newDescription = createDescription(secEvent);
+  pEvent.setDescription(newDescription);
   pEvent.setVisibility(CalendarApp.Visibility.PRIVATE); // set blocked time as private appointments in work calendar
   //location - check if it's changed
   var pLocation = pEvent.getLocation().trim();
@@ -217,7 +267,10 @@ function eventUpdate(cal, eventsTravel, pEvent, secEvent) {
       pEvent.resetRemindersToDefault();
     }
   }
-  
+
+  Logger.log('PRIMARY EVENT UPDATED' + 
+              '\nprimaryId: ' + pEvent.getId() + 
+              ' \nprimaryDesc: ' + newDescription + '\n');
   return {event: pEvent, newTravel: pTravel, deleteTravel: pTravelDeleted};
 }
 
@@ -230,14 +283,12 @@ function eventTravel(cal, eviTitle, eviStartTime, eviEndTime) {
                                         removeTravelBeforeReminders, {description: primaryEventTravelDescription+eviTitle});
   Logger.log('TRAVEL BUFFER CREATED (BEFORE)' + 
                 '\ntravelId: ' + travelBefore.getId() + 
-                '\ntravelTitle: ' + travelBefore.getTitle() + 
                 '\ntravelDesc ' + travelBefore.getDescription() + '\n');
 
   var travelAfter = eventTravelCreate(cal, primaryEventTravelTitle, eviEndTime, travelEndTime, 
                                         removeTravelAfterReminders, {description: primaryEventTravelDescription+eviTitle});
   Logger.log('TRAVEL BUFFER CREATED (AFTER)' + 
                 '\ntravelId: ' + travelAfter.getId() + 
-                '\ntravelTitle: ' + travelAfter.getTitle() + 
                 '\ntravelDesc ' + travelAfter.getDescription() + '\n');
 
   // return {travelBefore: travelBefore.getId(), travelAfter: travelAfter.getId()};
@@ -247,11 +298,19 @@ function eventTravel(cal, eviTitle, eviStartTime, eviEndTime) {
 
 // function to delete an event
 function eventDelete(evi, deleteStr) {
-  var eviId = evi.getId();
-  Logger.log(deleteStr + 
-            '\nprimaryId: ' + eviId + '\nprimaryTitle: ' + evi.getTitle() + '\nprimaryDesc ' + evi.getDescription() + '\n');
-  evi.deleteEvent();
-  return eviId;
+   try {
+     var eviId = evi.getId();
+    Logger.log(deleteStr + 
+              '\nprimaryId: ' + eviId + 
+              '\nprimaryDesc ' + evi.getDescription() + '\n');
+    evi.deleteEvent();
+    return eviId;
+   } catch (e) {
+     Logger.log('ERROR: COULD NOT DELETE:' +
+                  '\nprimaryId: ' + eviId + 
+                  '\nprimaryDesc ' + evi.getDescription() + '\n');
+   }
+   return;
 }
 
 // function to find and delete travel
@@ -285,9 +344,8 @@ function getEventTitle(evi) {
 }
 
 
-/*----- NOW THE MAIN FUNCTION -----*/
+/*----- NOW THE ACTUAL FUNCTION -----*/
 function sync() {
-
   var today=new Date();
   var enddate=new Date();
   enddate.setDate(today.getDate()+daysToSync); // how many days in advance to monitor and block off time
@@ -310,8 +368,8 @@ function sync() {
   var primaryEventsTravelCreated = []; // to contain primary calendar travel buffer events that were created
   var primaryEventsDeleted = []; // to contain primary calendar events previously created that have been deleted from secondary calendar
   var primaryEventsTravelDeleted = []; // to contain primary calendar travel buffer events that were deleted
-
-  Logger.log('Number of primaryEvents: ' + primaryEvents.length);  
+  
+  // Logger.log('Number of primaryEvents: ' + primaryEvents.length);  
   Logger.log('Number of secondaryEvents: ' + secondaryEvents.length);
   
   // create filtered list of existing primary calendar events that were previously created from the secondary calendar
@@ -330,10 +388,12 @@ function sync() {
     }
   }
   
+   Logger.log('Number of primaryEvents (holds): ' + primaryEventsFiltered.length);
+   Logger.log('Number of primaryEvents (travel buffers): ' + primaryEventsTravel.length);
+
   // process all events in secondary calendar
   for (sev in secondaryEvents)
   {
-    stat=1;
     evi=secondaryEvents[sev];
 
     // skip events you RSVP'ed "no" to
@@ -341,43 +401,37 @@ function sync() {
       continue;
     }
 
-    // Do nothing if the event is an all-day or multi-day event. This script only syncs hour-based events
+    // Do nothing if the event is an all-day event, if that setting is enabled
     if (skipAllDayEvents && evi.isAllDayEvent())
     {
       continue; 
     }
     
-    // if the secondary event has already been blocked in the primary calendar, update it
-    for (existingEvent in primaryEventsFiltered)
-      {
-        var pEvent = primaryEventsFiltered[existingEvent];
-        if (compareEvents(pEvent, evi)) {
-          stat=0;
-          var pEventTravel = eventUpdate(primaryCal, primaryEventsTravel, pEvent, evi);
-          var pEvent = pEventTravel.event;
-          primaryEventsUpdated.push(pEvent.getId());
-          if (pEventTravel.newTravel != null) { primaryEventsTravelCreated = primaryEventsTravelCreated.concat(pEventTravel.newTravel); }
-          if (pEventTravel.deleteTravel != null) { primaryEventsTravelDeleted = primaryEventsTravelDeleted.concat(pEventTravel.deleteTravel); }
-          Logger.log('PRIMARY EVENT UPDATED'
-                     + '\nprimaryId: ' + pEvent.getId() + ' \nprimaryTitle: ' + pEvent.getTitle() + ' \nprimaryDesc: ' + pEvent.getDescription());
-        } 
+    // if the secondary event is on a day/time that we're syncing events for, update/create the hold(s)
+    if (checkEventDay(evi) && !checkOOOstatus(evi)) {
+      stat=1;
+
+      // if the secondary event has already been blocked in the primary calendar, update it
+      for (existingEvent in primaryEventsFiltered)
+        {
+          var pEvent = primaryEventsFiltered[existingEvent];
+          if (compareEvents(pEvent, evi)) {
+            stat=0;
+            var pEventTravel = eventUpdate(primaryCal, primaryEventsTravel, pEvent, evi);
+            primaryEventsUpdated.push(pEventTravel.event.getId());
+            if (pEventTravel.newTravel != null) { primaryEventsTravelCreated = primaryEventsTravelCreated.concat(pEventTravel.newTravel); }
+            if (pEventTravel.deleteTravel != null) { primaryEventsTravelDeleted = primaryEventsTravelDeleted.concat(pEventTravel.deleteTravel); }
+          } 
+        }
+
+      // event wasn't in the primary calendar, so let's create it
+      if (stat > 0) {
+        var eviStartTime = evi.getStartTime();
+        var eviEndTime = evi.getEndTime();
+        var newEventTravel = eventCreate(primaryCal, primaryEventTitle, eviStartTime, eviEndTime, evi);
+        primaryEventsCreated.push(newEventTravel.event.getId());
+        if (newEventTravel.travel != null) { primaryEventsTravelCreated = primaryEventsTravelCreated.concat(newEventTravel.travel); }       
       }
-
-    if (stat==0) {
-      continue;    
-    }
-
-    // if the secondary event does not exist in the primary calendar, create it
-    // as long as it's on a day that we're syncing events for
-    if (checkEventDay(evi)) {
-      var eviStartTime = evi.getStartTime();
-      var eviEndTime = evi.getEndTime();
-      var newEventTravel = eventCreate(primaryCal, primaryEventTitle, eviStartTime, eviEndTime, evi);
-      var newEvent = newEventTravel.event;
-      if (newEventTravel.travel != null) { primaryEventsTravelCreated = primaryEventsTravelCreated.concat(newEventTravel.travel); }
-      primaryEventsCreated.push(newEvent.getId());
-      Logger.log('PRIMARY EVENT CREATED'
-                 + '\nprimaryId: ' + newEvent.getId() + '\nprimaryTitle: ' + newEvent.getTitle() + '\nprimaryDesc ' + newEvent.getDescription() + '\n');
     }
   }
 
@@ -402,4 +456,6 @@ function sync() {
   Logger.log('Primary events created: ' + primaryEventsCreated.length);
   Logger.log('Primary travel buffers deleted: ' + primaryEventsTravelDeleted.length);
   Logger.log('Primary travel buffers created: ' + primaryEventsTravelCreated.length);
+
+  return 0;
 }  
