@@ -77,19 +77,22 @@ Note - if you have multiple personal Google calendars you want to sync, you'll h
 1. In the Apps Script window, click the clock icon on the left sidebar. There should be a "Add trigger" button in the bottom right of the main window. 
 2. Click on "Add Trigger".
 3. Edit the trigger settings to be the following:
-  - Choose which function to run: **sync**
+  - Choose which function to run: **mainFcn**
   - Which runs at deployment: **Head** (this should be the default setting)
   - Select event source: **From calendar**
   - Enter calendar details: **Calendar updated** and then enter the **email associated with your personal calendar**
+  - The notification settings aren't super critical... I like it to notify me immediately if there's an issue, but a daily email is probably enough. If you do get this warnings, I'd recommend opening up the script from your Google Drive and running it to check out what's going on (like you did in C.9-10). For me, the most common reason I'd get an error was from doing too many sequential updates to my personal calendar (e.g., because I was rearranging multiple events), and since the script is triggered every time the personal calendar is updated, multiple changes mean multiple executions that can create conflicts. Manually running it afterwards generally resolved whatever was going on.
  4. As a caveat to the above, if you set the number of days to sync from your personal calendar to be a small number, you may want to add in a second trigger that runs on a time basis (e.g., a second trigger where the event source is "Time-driven", the type of time is a "Day timer", and it runs everyday "Midnight to 1am").
  
-> ![Parameters for setting up a trigger so that the script will automatically run when you update your personal calendar](images/trigger-setup.png)
+> ![Parameters for setting up a trigger so that the script will automatically run when you update your personal calendar](images/trigger-setup-v2.png)
 
 ### E. Optional: Change settings in the script
-Lines 42-56 include a variety of things you can change, including
+Lines 42-66 include a variety of things you can change, including
 * Default titles for holds and travel buffers on the primary/work calendar 
 * Default text for events with a location (that isn't a Zoom url)
 * Set the travel buffer time (DO NOT CHANGE THE `const minsToMilliseconds` in line 31)
 * Whether the script should skip all-day events and/or events on weekends. Note that setting `skipAllDayEvents = false` will only exclude multi-day events if they do not have set start/end times (e.g., something from 3pm on Wednesday through 4pm on Friday will still sync). Whether something occurs on a weekend is determined based on whether *both* the start and end times occurs on weekends. So, if `syncWeekdaysOnly = false`, something that starts on 3pm on Friday and ends on 3pm on Saturday will still sync, as will an event that is 3pm Sunday through 3pm Monday, but an event from 3pm Saturday to 3pm Sunday will *not* sync (since it's entirely over the weekend).
+* Whether the script should sync events from the personal calendar during "Out of office" events on the primary/work calendar. Note that this setting requires OOO events to be created in the "Out of office" type.
 * Whether the primary calendar should have default notifications enabled for holds and travel buffers
 * Whether the description for a hold on the primary/work calendar should have some default text (e.g., start with something about "This is a synced event"), or whether the hold description should also include the description from the secondary/personal calendar event. Note that setting `includeDescription = true` means that more information from your personal calendar will be present in your work calendar.
+* The estimated maximum time it'll take for the script to run. If you set up the trigger so that the script runs every time the personal calendar is updated, then if you delete 2 separate events back-to-back (because you're rearranging a bunch of stuff), the script will run 2 times. However, that can cause an error at the end because things will be deleted and thus not exist by the time the 2nd execution works its way through. 
