@@ -87,12 +87,13 @@ Note - if you have multiple personal Google calendars you want to sync, you'll h
 > ![Parameters for setting up a trigger so that the script will automatically run when you update your personal calendar](images/trigger-setup-v2.png)
 
 ### E. Optional: Change settings in the script
-Lines 42-66 include a variety of things you can change, including
+Lines 42-73 include a variety of things you can change, including
 * Default titles for holds and travel buffers on the primary/work calendar 
 * Default text for events with a location (that isn't a Zoom url)
 * Set the travel buffer time (DO NOT CHANGE THE `const minsToMilliseconds` in line 31)
 * Whether the script should skip all-day events and/or events on weekends. Note that setting `skipAllDayEvents = false` will only exclude multi-day events if they do not have set start/end times (e.g., something from 3pm on Wednesday through 4pm on Friday will still sync). Whether something occurs on a weekend is determined based on whether *both* the start and end times occurs on weekends. So, if `syncWeekdaysOnly = false`, something that starts on 3pm on Friday and ends on 3pm on Saturday will still sync, as will an event that is 3pm Sunday through 3pm Monday, but an event from 3pm Saturday to 3pm Sunday will *not* sync (since it's entirely over the weekend).
 * Whether the script should sync events from the personal calendar during "Out of office" events on the primary/work calendar. Note that this setting requires OOO events to be created in the "Out of office" type.
 * Whether the primary calendar should have default notifications enabled for holds and travel buffers
+* Calendar event colors for holds and travel buffers in the primary/work calendar
 * Whether the description for a hold on the primary/work calendar should have some default text (e.g., start with something about "This is a synced event"), or whether the hold description should also include the description from the secondary/personal calendar event. Note that setting `includeDescription = true` means that more information from your personal calendar will be present in your work calendar.
 * The estimated maximum time it'll take for the script to run. If you set up the trigger so that the script runs every time the personal calendar is updated, then if you delete 2 separate events back-to-back (because you're rearranging a bunch of stuff), the script will run 2 times. However, that can cause an error at the end because things will be deleted and thus not exist by the time the 2nd execution works its way through. 
