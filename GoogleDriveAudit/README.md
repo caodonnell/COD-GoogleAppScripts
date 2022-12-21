@@ -41,7 +41,7 @@ These are the columns that are produced by the audit script:
       * *Alternate option:* If you expect you'll want to edit the script (e.g., change the output parameters), I recommend importing in the script as a series of files from [this folder](https://github.com/caodonnell/COD-GoogleAppScripts/tree/main/GoogleDriveAudit/IndividualGS). I often put my "main" function (```onOpen()```) in the Code.gs file, and then will add more script files for other functions. The names of the additional script files are not important - Google Sheets will import them all in.
   
  5. Press the "Save" icon (floppy disk), and then press "Run", making sure ```onOpen``` is the selection to the right of "Run". The script will ask for your permission, since it is enabled to access (and modify) your Drive files. Please accept all permissions.
- > ![Save and run the script](images/apps-script-run.png)
+ > ![Save and run the script](images/apps-script-run2.png)
  
  6. Return to the Google Sheet. There should now be an extra menu item for "List Files and Folders". Select the option that best matches what you want the audit to do:
     * **List All Files and Folders** will list files in the main folder, and it will go into any subfolders to find files there (and into any subsubfolders and so on).
